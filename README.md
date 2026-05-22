@@ -43,4 +43,5 @@ A Python-based script helps find where to buy a beauty product at the best price
 
 ## Notes
 - This tracker is for learning purposes
-- Some websites may block automated requests
+- Requests -> only downloads initial HTML (for dynamically rendered webpages, you won't be able to get some values from their HTML using requests)
+- Playwright (for dynamically rendered webpages)-> opens a real browser, then opens your webpage on the browser and gives you the fully rendered HTML currently inside the browser (AFTER JS). 
