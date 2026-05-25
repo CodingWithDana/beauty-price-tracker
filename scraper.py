@@ -8,6 +8,10 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0"
 }
 
+URL_MECCA = "https://www.mecca.com/en-au/estee-lauder/advanced-night-repair-synchronized-multi-recovery-complex-50ml-I-047179/?cgpath=search-results"
+URL_ADORE = "https://www.adorebeauty.com.au/p/estee-lauder/estee-lauder-advanced-night-repair-synchronized-multi-recovery-complex-50ml.html"
+URL_MYER = "https://www.myer.com.au/p/estee-lauder-advanced-night-repair-synchronized-multi-recovery-complex-serum?size=50ml"
+
 # Mecca site
 def scrape_mecca(url):
     response = requests.get(url, headers=HEADERS, timeout=10)
@@ -30,11 +34,8 @@ def scrape_mecca(url):
         "store": "Mecca",
         "product": product,
         "price": price,
-        "url": url_mecca
+        "url": URL_MECCA
     }
-url_mecca = "https://www.mecca.com/en-au/estee-lauder/advanced-night-repair-synchronized-multi-recovery-complex-50ml-I-047179/?cgpath=search-results"
-result_mecca = scrape_mecca(url_mecca)
-print(result_mecca)
 
 # Adore Beauty site
 def scrape_adore(url):
@@ -64,30 +65,29 @@ def scrape_adore(url):
         "store": "Adore",
         "product": product,
         "price": price,
-        "url": url_adore 
+        "url": URL_ADORE 
     }
 
-url_adore = "https://www.adorebeauty.com.au/p/estee-lauder/estee-lauder-advanced-night-repair-synchronized-multi-recovery-complex-50ml.html"
-scrape_adore(url_adore)
-    
+
+
 # Myer site 
 def scrape_myer(url):
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)
+        browser = p.chromium.launch(headless=True)
         page = browser.new_page()
         page.goto(url, wait_until="networkidle")
         
         html = page.content()
         browser.close()
-        
+
     soup_myer = BeautifulSoup(html, "html.parser") 
-    
+
     product_tag = soup_myer.select_one('[data-cs-override-id="product-title"]')
     if not product_tag:
         print("Product name not found")
         return
     product = product_tag.get_text(strip=True)
-    
+
     # get the price text near the product title, not the entire page
     price_section = product_tag.find_parent()
     nearby_text = price_section.get_text("\n", strip=True) if price_section else soup_myer.get_text("\n", strip=True)
@@ -96,15 +96,14 @@ def scrape_myer(url):
         prices_as_text
     else:
         return
-    
+
     return {
         "store": "Myer",
         "product": product,
-        "price": prices_as_text,
-        "url": url_myer        
+        "price": prices_as_text[0],
+        "url": URL_MYER        
     }
-url_myer = "https://www.myer.com.au/p/estee-lauder-advanced-night-repair-synchronized-multi-recovery-complex-serum?size=50ml"
-scrape_myer(url_myer)
+
 
 # clean the scraped prices
 def parse_price(price_text):
@@ -136,16 +135,18 @@ def find_best_price(stores):
     
     print(
         f"Currently {cheapest['store']} offers the best price"
-        f"at {cheapest['price']}. Link to buy here: {cheapest['url']}"
+        f" at {cheapest['price']}. Link to buy here: {cheapest['url']}"
     )
     
     return cheapest
 
-result_mecca = scrape_mecca(url_mecca)
-result_adore = scrape_adore(url_adore)
-result_myer = scrape_myer(url_myer)
-
+result_mecca = scrape_mecca(URL_MECCA)
+result_adore = scrape_adore(URL_ADORE)
+result_myer = scrape_myer(URL_MYER)
 stores = [result_mecca, result_adore, result_myer]
-
 best_price = find_best_price(stores)
 
+# Debug
+# print(result_mecca)
+# print(result_adore)
+# print(result_myer)
